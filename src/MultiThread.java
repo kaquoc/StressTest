@@ -20,10 +20,14 @@ public class MultiThread {
         long cpuBefore = osMBean.getProcessCpuTime();
 
 
+        /**To monitor our application-created threads, is it best to use ThreadGroup such that we don't confuse
+         * other JVM-create threads (such as the main thread)*/
 
+        ThreadGroup tg1 = new ThreadGroup("ThreadGroup 1");
         //initializing threads
-        for (int i = 0;i <8;i++){
-            Thread t1 = new Thread(new MultiThread().new RunnableImpl());
+        for (int i = 0;i <0;i++){
+            //all our threads will be in threadgroup 1
+            Thread t1 = new Thread(tg1,new MultiThread().new RunnableImpl());
             t1.start();
 
             //threads information.
@@ -36,6 +40,8 @@ public class MultiThread {
 
         long nanoAfter = System.nanoTime();
         long cpuAfter = osMBean.getProcessCpuTime();
+
+
 
         System.out.println(Thread.activeCount());
 
