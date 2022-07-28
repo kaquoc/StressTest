@@ -10,7 +10,7 @@ import javax.management.MBeanServerConnection;
 public class MultiThread {
     int threadNum;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
 
         /**Monitoring processes, getting processes time before extensive stress test begins*/
         MBeanServerConnection mbsc = ManagementFactory.getPlatformMBeanServer();
@@ -21,11 +21,12 @@ public class MultiThread {
 
 
         /**To monitor our application-created threads, is it best to use ThreadGroup such that we don't confuse
-         * other JVM-create threads (such as the main thread)*/
+         * other JVM-create threads (such as the main threads)
+         * */
 
         ThreadGroup tg1 = new ThreadGroup("ThreadGroup 1");
         //initializing threads
-        for (int i = 0;i <0;i++){
+        for (int i = 0;i <2;i++){
             //all our threads will be in threadgroup 1
             Thread t1 = new Thread(tg1,new MultiThread().new RunnableImpl());
             t1.start();
@@ -41,14 +42,15 @@ public class MultiThread {
         long nanoAfter = System.nanoTime();
         long cpuAfter = osMBean.getProcessCpuTime();
 
+        Thread.sleep(5000); //sleep for 5 seconds after program starts.
+        System.out.println("number of application-created threads running: " + tg1.activeCount());
 
-
-        System.out.println(Thread.activeCount());
-
+        long cpu_usage = usage(nanoBefore,cpuBefore,nanoAfter,cpuAfter);
+        System.out.println("Cpu usage: " + cpu_usage + "%");
 
     }
 
-    private long usage(long nanoBefore, long cpuBefore, long nanoAfter, long cpuAfter){
+    private static long usage(long nanoBefore, long cpuBefore, long nanoAfter, long cpuAfter){
         long percent;
         if (nanoAfter > nanoBefore) {
             //make sure our time is right, since it's arbitrary
@@ -63,8 +65,6 @@ public class MultiThread {
 
         public void run()
         {
-            System.out.println(Thread.currentThread().getName()
-                    + ", executing run() method!");
             fibo(9000);
         }
         /**Stress testing using fibonacci sequence*/
