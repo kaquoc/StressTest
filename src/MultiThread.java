@@ -1,4 +1,6 @@
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
@@ -14,7 +16,6 @@ import javax.management.MBeanServerConnection;
 
 
 public class MultiThread {
-    int threadNum;
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
@@ -49,10 +50,21 @@ public class MultiThread {
         }
          **/
 
+        int threadNum = 0;
+        //Getting user inputs
+        BufferedReader reader = new BufferedReader(
+                new InputStreamReader(System.in));
+        System.out.println("Enter number of threads to create: ");
+        threadNum = Integer.parseInt(reader.readLine());
+
+
+        //using LongAdder because it's thread-safe. Prevent data-race scenario between threads
         LongAdder counter = new LongAdder();
-        for(int i = 0; i < 8;i++){
+        for(int i = 0; i < threadNum;i++){
+
             AdderThread thread = new AdderThread(counter);
             Thread t = new Thread(thread);
+            tg2.add(t);
             t.start();
         }
 
@@ -68,26 +80,21 @@ public class MultiThread {
             {
                 break;
             }
-            System.out.printf("[%d] Calculations per second: %d (%.2f per thread)\n",
+            System.out.printf("[%d] Calculations per second: %d (%d per thread)\n",
                     i,
                     counter.longValue(),
-                    (double)(counter.longValue()) /8
+                    counter.intValue()/threadNum
             );
+        }
+        for (int i = 0;i<threadNum;i++){
+            System.out.printf("Stopping thread [%d]\n", i);
+            tg2.get(i).stop();
         }
 
 
-
-
-
-
-
-
         /**Start monitoring processes after processes begins*/
-
         long nanoAfter = System.nanoTime();
         long cpuAfter = osMBean.getProcessCpuTime();
-
-        Thread.sleep(7000); //sleep for 5 seconds after program starts.
         System.out.println("number of application-created threads running: " + tg1.activeCount());
 
         long cpu_usage = usage(nanoBefore,cpuBefore,nanoAfter,cpuAfter);
