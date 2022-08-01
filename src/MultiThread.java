@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.LongAdder;
 
 import com.sun.management.OperatingSystemMXBean;
+import com.sun.nio.sctp.PeerAddressChangeNotification;
 
 import javax.management.MBeanServerConnection;
 
@@ -33,7 +34,8 @@ public class MultiThread {
 
         ThreadGroup tg1 = new ThreadGroup("ThreadGroup 1");
         List<Thread> tg2 = new ArrayList<>();
-        //initializing threads
+        /**
+        //initializing FIBO threads
         for (int i = 0;i <8;i++){
             //all our threads will be in threadgroup 1
             Thread t1 = new Thread(tg1,new MultiThread().new RunnableImpl());
@@ -45,6 +47,40 @@ public class MultiThread {
             ThreadInfo ti = tm.getThreadInfo(t1.getId());
             System.out.println(ti);
         }
+         **/
+
+        LongAdder counter = new LongAdder();
+        for(int i = 0; i < 8;i++){
+            AdderThread thread = new AdderThread(counter);
+            Thread t = new Thread(thread);
+            t.start();
+        }
+
+
+        for (int i = 0; i < 15; i++)
+        {
+            counter.reset();
+            try
+            {
+                Thread.sleep(1000);
+            }
+            catch (InterruptedException e)
+            {
+                break;
+            }
+            System.out.printf("[%d] Calculations per second: %d (%.2f per thread)\n",
+                    i,
+                    counter.longValue(),
+                    (double)(counter.longValue()) /8
+            );
+        }
+
+
+
+
+
+
+
 
         /**Start monitoring processes after processes begins*/
 
@@ -57,7 +93,7 @@ public class MultiThread {
         long cpu_usage = usage(nanoBefore,cpuBefore,nanoAfter,cpuAfter);
         System.out.println("Cpu usage: " + cpu_usage + "%");
 
-  
+
 
     }
 
@@ -98,11 +134,34 @@ public class MultiThread {
     }
 
     /**Another method to stress test, using long calculation*/
-    public class AdderThread implements Runnable{
+    public static class AdderThread implements Runnable{
         Random rng;
         LongAdder calcP;
         boolean stopped;
         double store;
+
+
+        public AdderThread(LongAdder x){
+            this.calcP = x;
+            this.stopped = false;
+            this.rng = new Random();
+            this.store = 1;
+        }
+
+        @Override
+        public void run(){
+            while(!this.stopped){
+                double x = this.rng.nextFloat();
+                double y = Math.sin(Math.cos(Math.sin(Math.cos(x))));
+                this.store *=y;
+                this.calcP.add(1);
+            }
+        }
+
+        public void stop(){
+            this.stopped = true;
+        }
+
     }
 
 }
